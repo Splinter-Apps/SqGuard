@@ -81,7 +81,14 @@ open class ResGuardEncoder : SqTask() {
 
     companion object : SqTaskCompanion() {
         override fun Project.addToTaskSequence() {
-            tasks.named("mergeReleaseResources") { dependsOn(taskKClass.jvmName) }
+            val taskNames = project.gradle.startParameter.taskNames
+            println("TasksNames: $taskNames")
+            if (taskNames.any { it.lowercase().contains("release") }) {
+                println("ResGuardEncoder ADDED")
+                tasks.named("preBuild") { dependsOn(taskKClass.jvmName) }
+            } else {
+                println("ResGuardEncoder SKIPPED")
+            }
         }
     }
 }
