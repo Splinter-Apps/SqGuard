@@ -7,15 +7,17 @@ import java.io.File
 
 object Helper {
     fun getResources(project: Project): List<File> {
-        val resTypes = project.extensions.getByType(ResGuardExtensions::class.java).resTypes
+        val ext = project.extensions.getByType(ResGuardExtensions::class.java)
+        val resTypes = ext.resTypes
         val s = File.separator
-        return project.layout.projectDirectory.dir("src${s}main${s}res").run {
-            asFile.listFiles().filter {
+        val resDirPath = ext.resDirPath ?: "src${s}main${s}res"
+        return project.layout.projectDirectory.dir(resDirPath).run {
+            asFile.listFiles()?.filter {
                 resTypes.any { resTypeName ->
                     it.name.contains(resTypeName.name.lowercase())
                 }
-            }
-        }.map { it.listFiles().toList() }.flatten()
+            } ?: emptyList()
+        }.map { it.listFiles()?.toList() ?: emptyList() }.flatten()
     }
 
     fun getResGuardMappingFile(project: Project): File {

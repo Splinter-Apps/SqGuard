@@ -11,10 +11,10 @@ import com.sqwerty.res_guard.utils.Helper.isInBlacklist
 import com.sqwerty.res_guard.utils.Helper.replaceRes
 import com.sqwerty.res_guard.utils.Helper.updateFileName
 import com.sqwerty.res_guard.utils.ResType
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.gradle.api.Project
 import org.gradle.api.Task
 import java.io.File
@@ -27,32 +27,33 @@ open class ResGuardEncoder : SqTask() {
     override fun Task.doLast() {
         val mappingFOS = FileOutputStream(mappingFile, false)
         val resources = getResources(project)
-        val scope = CoroutineScope(Dispatchers.IO)
+        val s = File.separator
+        val sourceDirPath = project.extensions.getByType(ResGuardExtensions::class.java).sourceDirPath
+            ?: "src${s}main"
 
-        val asyncResUpdating = resources.groupBy { res -> res.nameWithoutExtension }.values
-            .map { grouped ->
-                scope.launch {
-                    val res = grouped.first()
+        runBlocking(Dispatchers.IO) {
+            val asyncResUpdating = resources.groupBy { res -> res.nameWithoutExtension }.values
+                .map { grouped ->
+                    launch {
+                        val res = grouped.first()
 
-                    val encryptedValue = let {
-                        var encryptedName = res.nameWithoutExtension.encryptValue(project)
-                        while (mappingFile.readText().contains(encryptedName)) {
-                            encryptedName = res.nameWithoutExtension.encryptValue(project)
+                        val encryptedValue = let {
+                            var encryptedName = res.nameWithoutExtension.encryptValue(project)
+                            while (mappingFile.readText().contains(encryptedName)) {
+                                encryptedName = res.nameWithoutExtension.encryptValue(project)
+                            }
+                            encryptedName
                         }
-                        encryptedName
-                    }
-                    mappingFOS.writeValue(res.nameWithoutExtension, encryptedValue)
-                    grouped.forEach {
-                        it.updateFileName(encryptedValue, project)
+                        mappingFOS.writeValue(res.nameWithoutExtension, encryptedValue)
+                        grouped.forEach {
+                            it.updateFileName(encryptedValue, project)
+                        }
                     }
                 }
-            }
-        scope.launch {
             asyncResUpdating.joinAll()
             mappingFOS.close()
-            val s = File.separator
             val latestMapping = getResGuardMap(project)
-            getAllProjectFilesViaRecursion(project.layout.projectDirectory.dir("src${s}main").asFile)
+            getAllProjectFilesViaRecursion(project.layout.projectDirectory.dir(sourceDirPath).asFile)
                 .forEach { file ->
                     if (file.isInBlacklist(project)) return@forEach
                     file.readText().apply {
