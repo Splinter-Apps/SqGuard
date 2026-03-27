@@ -11,7 +11,7 @@ gradlePlugin {
     plugins {
         create("resGuardPlugin") {
             id = "sq.res-guard"
-            version = "1.0.1"
+            version = "1.0.2"
             implementationClass = "com.sqwerty.res_guard.ResGuardPlugin"
         }
     }
@@ -27,7 +27,7 @@ afterEvaluate {
                 from(components["java"])
                 groupId = "com.github.s4mkofftrid"
                 artifactId = "sqGuard"
-                version = "1.0.1"
+                version = "1.0.2"
             }
         }
     }
