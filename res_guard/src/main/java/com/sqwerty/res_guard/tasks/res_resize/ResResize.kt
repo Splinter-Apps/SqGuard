@@ -8,7 +8,6 @@ import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import java.io.File
 import kotlin.reflect.jvm.jvmName
-import kotlin.text.contains
 
 open class ResResize : SqTask() {
     private val isWin = System.getProperty("os.name").lowercase().run {
@@ -16,8 +15,10 @@ open class ResResize : SqTask() {
     }
     private lateinit var magickDir: Directory
     private val s = File.separator
-    private val drawableDir = project.layout.projectDirectory.dir("src${s}main${s}res${s}drawable")
-        .asFile
+    private val drawableDir = project.layout.projectDirectory.dir(
+        (project.extensions.getByType(ResResizeExtensions::class.java).resDirPath
+            ?: "src${s}main${s}res") + "${s}drawable"
+    ).asFile
 
     override fun Task.doLast() {
         prepareDirs()

@@ -13,4 +13,10 @@ open class ResResizeExtensions {
     var resizeHard: Boolean = false
 
     var enabled: Boolean = false
+
+    /**
+     * Path to the res directory relative to the project dir.
+     * Defaults to "src/main/res". Set to "src/androidMain/res" for KMP projects.
+     */
+    var resDirPath: String? = null
 }
