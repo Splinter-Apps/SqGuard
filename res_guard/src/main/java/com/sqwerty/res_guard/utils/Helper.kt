@@ -48,7 +48,11 @@ object Helper {
     }
 
     fun File.isInBlacklist(project: Project): Boolean {
-        return isImage() || absolutePath.contains("build") || extension.run {
+        val buildDirPath = project.layout.buildDirectory.get().asFile.canonicalPath
+        val thisPath = canonicalFile.path
+        val isUnderBuildDir = thisPath == buildDirPath ||
+                thisPath.startsWith(buildDirPath + File.separator)
+        return isImage() || isUnderBuildDir || extension.run {
             contains("mp") || contains("tf")
         }
     }
